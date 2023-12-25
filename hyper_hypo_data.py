@@ -5,12 +5,10 @@ import random
 import nltk
 from nltk.corpus import wordnet as wn
 
-import torch
-from torch.utils.data import Dataset
-
 
 Synset = nltk.corpus.reader.wordnet.Synset
 HyperHypoPair = tuple[Synset, Synset]
+HypoHyperPromptDataset = tuple[list[str], list[bool]]
 
 
 def get_all_hyper_hypo_pairs() -> list[HyperHypoPair]:
@@ -47,16 +45,17 @@ def get_mixed_prompt_dataset_impl(
     true_pairs: list[HyperHypoPair],
     bogus_pairs: list[HyperHypoPair],
     to_string_mapper: Callable[[HyperHypoPair], str]
-) -> list[str]:
-    return ([(to_string_mapper(p), True) for p in true_pairs]
-          + [(to_string_mapper(p), False) for p in bogus_pairs])
+) -> HypoHyperPromptDataset:
+    prompts = [to_string_mapper(p) for p in true_pairs + bogus_pairs]
+    labels = [True for _ in true_pairs] + [False for _ in bogus_pairs]
+    return prompts, labels
 
 
 def get_mixed_prompt_dataset(
     size: int = 50000,
     prompt_type: str = "is_a_kind_of",
     rng_seed: int = 42
-) -> list[tuple[str, bool]]:
+) -> HypoHyperPromptDataset:
     if size < 2:
         raise ValueError(f"too small size: {size}")
     if prompt_type not in ["is_a_kind_of"]:
@@ -78,19 +77,22 @@ def get_mixed_prompt_dataset(
     )
 
 
-def save_prompt_dataset_as_csv(dataset: list[tuple[str, bool]], filepath: str):
+def save_prompt_dataset_as_csv(dataset: HypoHyperPromptDataset, filepath: str):
+    prompts, labels = dataset
     with open(filepath, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(["prompt", "label"])
-        writer.writerows(dataset)
+        writer.writerows(zip(prompts, labels))
 
 
 if __name__ == "__main__":
     nltk.download("wordnet")
 
-    d = get_mixed_prompt_dataset()
-    print(random.sample(d, k=20))
+    dataset = get_mixed_prompt_dataset()
+    prompts, labels = dataset
+    zipped = list(zip(prompts, labels))
+    print(random.sample(zipped, k=20))
 
     filepath = "CHECK_THIS_OUT.csv"
     print(filepath)
-    save_prompt_dataset_as_csv(d, filepath)
+    save_prompt_dataset_as_csv(dataset, filepath)
