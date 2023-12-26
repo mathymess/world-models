@@ -46,7 +46,7 @@ def get_layer_activations_hf(bs: int, tokenized_prompts: torch.Tensor,
     if device is None:
         device = model.device
 
-    n_seq, ctx_len = tokenize_prompts.shape
+    n_seq, ctx_len = tokenized_prompts.shape
     activation_rows = n_seq
 
     layer_activations = {
@@ -55,7 +55,7 @@ def get_layer_activations_hf(bs: int, tokenized_prompts: torch.Tensor,
     }
 
     offset = 0
-    dataloader = DataLoader(tokenize_prompts, batch_size=bs, shuffle=False)
+    dataloader = DataLoader(tokenized_prompts, batch_size=bs, shuffle=False)
 
     for step, batch in enumerate(tqdm(dataloader, disable=False)):
         # clip batch to remove excess padding
