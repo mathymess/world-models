@@ -6,8 +6,6 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-import einops
-
 import os
 import argparse
 
@@ -79,7 +77,6 @@ def get_layer_activations_hf(
             return_dict=True,
             use_cache=False,
         )
-        print("Got first layer activation")
 
         # do not save post embedding layer activations
         for lix, activation in enumerate(out.hidden_states[1:]):
@@ -131,13 +128,16 @@ def write_activations_to_disk(layer_activations: dict[int, torch.Tensor], save_d
 
 
 def main(batch_size: int, save_dir: str):
-    prompts, _labels = get_mixed_prompt_dataset(size=50000, prompt_type="is_a_kind_of", rng_seed=42)
+    dataset = get_mixed_prompt_dataset(size=50000, prompt_type="is_a_kind_of", rng_seed=42)
+    prompts, _labels = dataset
     tokenized_prompts, attention_mask = tokenize_prompts(prompts)
 
     print("Generated the dataset, computing layer activations")
     layer_activations = get_layer_activations_hf(batch_size, tokenized_prompts, attention_mask)
     print("Got layer activations, saving them to disk")
+
     write_activations_to_disk(layer_activations, save_dir)
+    save_prompt_dataset_as_csv(dataset, os.path.join(save_dir, "dataset.csv"))
 
 
 if __name__ == "__main__":
