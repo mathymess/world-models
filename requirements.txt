@@ -1,6 +1,7 @@
-torch
+torch==2.1.0
 torchtext
-transformer-lens
+torchvision
+# transformer-lens
 networkx
 numpy
 pandas
@@ -22,3 +23,5 @@ geonamescache
 accelerate
 geopandas
 bitsandbytes
+einops
+datasets
